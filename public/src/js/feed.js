@@ -8,11 +8,47 @@ var form = document.querySelector("form")
 var titleInput = document.querySelector("#title")
 var locationInput = document.querySelector("#location")
 
+var videoPlayer = document.querySelector("#player")
+var canvasElement = document.querySelector("#canvas")
+var captureButton = document.querySelector("#capture-btn")
+var imagePicker = document.querySelector("#image-picker")
+var imagePickerArea = document.querySelector("#pick-image")
+
+function initializeMedia() {
+  if (!"mediaDevices" in navigator) {
+    navigator.mediaDevices = {}
+  }
+
+  if (!("getUserMedia" in navigator.mediaDevices)) {
+    navigator.mediaDevices.getUserMedia = function (constraints) {
+      var getUserMedia =
+        navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+      if (!getUserMedia) {
+        return Promise.reject(new Error("getUserMedia is not implemented!"))
+      }
+      return new Promise((resolve, reject) => {
+        getUserMedia.call(navigator, constraints, resolve, reject)
+      })
+    }
+  }
+
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then((stream) => {
+      videoPlayer.srcObject = stream
+      videoPlayer.style.display = "block"
+    })
+    .catch((err) => {
+      imagePickerArea.style.display = "block"
+    })
+}
+
 function openCreatePostModal() {
-  setTimeout(() => {
-    createPostArea.style.transform = "translateY(0)"
-  }, 1)
-  
+  // setTimeout(() => {
+  createPostArea.style.transform = "translateY(0)"
+  initializeMedia()
+  // }, 1)
+
   if (deferredPrompt) {
     deferredPrompt.prompt()
 
@@ -40,6 +76,9 @@ function openCreatePostModal() {
 
 function closeCreatePostModal() {
   createPostArea.style.transform = "translateY(100vh)"
+  imagePickerArea.style.display = "none"
+  videoPlayer.style.display = "none"
+  canvasElement.style.display = "none"
 }
 
 shareImageButton.addEventListener("click", openCreatePostModal)
@@ -67,7 +106,7 @@ function createCard(data) {
   cardWrapper.className = "shared-moment-card mdl-card mdl-shadow--2dp"
   var cardTitle = document.createElement("div")
   cardTitle.className = "mdl-card__title"
-  cardTitle.style.backgroundImage = 'url(' + data.image + ')'
+  cardTitle.style.backgroundImage = "url(" + data.image + ")"
   cardTitle.style.backgroundSize = "cover"
   cardWrapper.appendChild(cardTitle)
   var cardTitleTextElement = document.createElement("h2")
@@ -115,11 +154,10 @@ fetch(url)
   })
 
 if ("indexedDB" in window) {
-  readAllData("posts")
-    .then(data => {
-      if (!networkDataReceived) {
-        console.log("from cache", data)
-        updateUi(data)
+  readAllData("posts").then((data) => {
+    if (!networkDataReceived) {
+      console.log("from cache", data)
+      updateUi(data)
     }
   })
 }
@@ -128,23 +166,23 @@ function sendData() {
   fetch("https://us-central1-pwagram-920d5.cloudfunctions.net/storePostData", {
     method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      "Content-Type": "application/json",
+      "Accept": "application/json",
     },
     body: JSON.stringify({
       id: new Date().toISOString(),
       title: titleInput.value,
       location: locationInput.value,
-      image: 'https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5'
-    })
-  })
-    .then((res) => {
-      console.log("Sent data", res)
-      updateUi()
+      image:
+        "https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5",
+    }),
+  }).then((res) => {
+    console.log("Sent data", res)
+    updateUi()
   })
 }
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit", (event) => {
   event.preventDefault()
 
   if (titleInput.value.trim() === "" || locationInput.value.trim() === "") {
@@ -155,28 +193,26 @@ form.addEventListener("submit", event => {
   closeCreatePostModal()
 
   if ("serviceWorker" in navigator && "SyncManager" in window) {
-    navigator.serviceWorker.ready
-      .then(sw => {
-        var post = {
-          id: new Date().toISOString(),
-          title: titleInput.value,
-          location: locationInput.value
-        }
-        writeData("sync-posts", post)
-          .then(() => {
-            return sw.sync.register("sync-new-posts")
-          })
-          .then(() => {
-            var snackbarContainer = document.querySelector("#confirmation-toast")
-            var data = { message: "Your Post was saved for syncing" }
-            snackbarContainer.MaterialSnackbar.showSnackbar(data)
-          })
-          .catch(err => {
-            console.log(err)
-          })
+    navigator.serviceWorker.ready.then((sw) => {
+      var post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value,
+      }
+      writeData("sync-posts", post)
+        .then(() => {
+          return sw.sync.register("sync-new-posts")
+        })
+        .then(() => {
+          var snackbarContainer = document.querySelector("#confirmation-toast")
+          var data = { message: "Your Post was saved for syncing" }
+          snackbarContainer.MaterialSnackbar.showSnackbar(data)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
     })
   } else {
     sendData()
   }
-
 })

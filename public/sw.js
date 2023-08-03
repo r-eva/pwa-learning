@@ -1,7 +1,7 @@
-importScripts('/src/js/idb.js')
-importScripts('/src/js/utility.js')
+importScripts("/src/js/idb.js")
+importScripts("/src/js/utility.js")
 
-var CACHE_STATIC_NAME = "static-v20"
+var CACHE_STATIC_NAME = "static-v24"
 var CACHE_DYNAMIC_NAME = "dynamic-v2"
 var STATIC_FILES = [
   "/",
@@ -73,13 +73,13 @@ self.addEventListener("fetch", function (event) {
   if (event.request.url.indexOf(url) > -1) {
     event.respondWith(
       fetch(event.request).then((res) => {
-          // trimCache(CACHE_DYNAMIC_NAME, 3)
+        // trimCache(CACHE_DYNAMIC_NAME, 3)
         var cloneRes = res.clone()
         clearAllData("posts")
           .then(() => {
             return cloneRes.json()
           })
-          .then(data => {
+          .then((data) => {
             for (var key in data) {
               writeData("posts", data[key])
             }
@@ -119,48 +119,49 @@ self.addEventListener("fetch", function (event) {
   }
 })
 
-self.addEventListener('sync', (event) => {
+self.addEventListener("sync", (event) => {
   console.log("[Service Worker] Background syncing", event)
   if (event.tag === "sync-new-posts") {
-    console.log('[Service worker] Syncing new Posts')
+    console.log("[Service worker] Syncing new Posts")
     event.waitUntil(
-      readAllData('sync-posts')
-        .then(data => {
-          for (var dt of data) {
-             console.log(dt)
-              fetch("https://us-central1-pwagram-920d5.cloudfunctions.net/storePostData", {
-                method: "POST",
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                  id: dt.id,
-                  title: dt.title,
-                  location: dt.location,
-                  image: 'https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5'
+      readAllData("sync-posts").then((data) => {
+        for (var dt of data) {
+          console.log(dt)
+          fetch(
+            "https://us-central1-pwagram-920d5.cloudfunctions.net/storePostData",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+              },
+              body: JSON.stringify({
+                id: dt.id,
+                title: dt.title,
+                location: dt.location,
+                image:
+                  "https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5",
+              }),
+            }
+          )
+            .then((res) => {
+              console.log("Sent data", res)
+              if (res.ok) {
+                res.json().then((resData) => {
+                  deleteItemFromData("sync-posts", resData.id)
                 })
-              })
-              .then((res) => {
-                console.log("Sent data", res)
-                if (res.ok) {
-                  res.json()
-                    .then(resData => {
-                    deleteItemFromData("sync-posts", resData.id)
-                  })
-                }
-              })
-              .catch(err => {
-                console.log("Error while sending data", err)
-              })
-          }
+              }
+            })
+            .catch((err) => {
+              console.log("Error while sending data", err)
+            })
+        }
       })
     )
   }
 })
 
-
-self.addEventListener("notificationclick", event => {
+self.addEventListener("notificationclick", (event) => {
   var notification = event.notification
   var action = event.action
   console.log(notification)
@@ -170,30 +171,29 @@ self.addEventListener("notificationclick", event => {
   } else {
     console.log(action)
     event.waitUntil(
-      clients.matchAll()
-        .then(clis => {
-          var client = clis.find(item => {
+      clients.matchAll().then((clis) => {
+        var client = clis.find((item) => {
           return item.visibilityState === "visible"
-          })
-          if (client !== undefined) {
-            client.navigate(notification.data.url)
-            client.focus()
-          } else {
-            clients.openWindow(notification.data.url)
-          }
-          notification.close()
         })
+        if (client !== undefined) {
+          client.navigate(notification.data.url)
+          client.focus()
+        } else {
+          clients.openWindow(notification.data.url)
+        }
+        notification.close()
+      })
     )
   }
 })
 
-self.addEventListener("notificationclose", event => {
+self.addEventListener("notificationclose", (event) => {
   console.log("Notification was close", event)
 })
 
-self.addEventListener("push", event => {
+self.addEventListener("push", (event) => {
   console.log("Push notification received", event)
-  var data = { title: "New!", content: "Something new happened!", openUrl: "/"}
+  var data = { title: "New!", content: "Something new happened!", openUrl: "/" }
   if (event.data) {
     data = JSON.parse(event.data.text())
   }
@@ -202,11 +202,8 @@ self.addEventListener("push", event => {
     icon: "/src/images/icons/app-icon-96x96.png",
     badge: "/src/images/icons/app-icon-96x96.png",
     data: {
-      url: data.openUrl
-    }
+      url: data.openUrl,
+    },
   }
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  )
-
+  event.waitUntil(self.registration.showNotification(data.title, options))
 })

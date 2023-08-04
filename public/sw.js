@@ -1,13 +1,14 @@
 importScripts("/src/js/idb.js")
 importScripts("/src/js/utility.js")
 
-var CACHE_STATIC_NAME = "static-v24"
-var CACHE_DYNAMIC_NAME = "dynamic-v2"
+var CACHE_STATIC_NAME = "static-v29"
+var CACHE_DYNAMIC_NAME = "dynamic-v7"
 var STATIC_FILES = [
   "/",
   "/index.html",
   "/offline.html",
   "/src/js/app.js",
+  "/src/js/utility.js",
   "/src/js/feed.js",
   "/src/js/idb.js",
   "/src/js/promise.js",
@@ -126,22 +127,17 @@ self.addEventListener("sync", (event) => {
     event.waitUntil(
       readAllData("sync-posts").then((data) => {
         for (var dt of data) {
-          console.log(dt)
+          var postData = new FormData()
+          postData.append("id", dt.id)
+          postData.append("title", dt.title)
+          postData.append("location", dt.location)
+          postData.append("file", dt.picture, dt.id + ".png")
+
           fetch(
             "https://us-central1-pwagram-920d5.cloudfunctions.net/storePostData",
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-              },
-              body: JSON.stringify({
-                id: dt.id,
-                title: dt.title,
-                location: dt.location,
-                image:
-                  "https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5",
-              }),
+              body: postData,
             }
           )
             .then((res) => {

@@ -13,6 +13,7 @@ var canvasElement = document.querySelector("#canvas")
 var captureButton = document.querySelector("#capture-btn")
 var imagePicker = document.querySelector("#image-picker")
 var imagePickerArea = document.querySelector("#pick-image")
+var picture
 
 function initializeMedia() {
   if (!"mediaDevices" in navigator) {
@@ -42,6 +43,25 @@ function initializeMedia() {
       imagePickerArea.style.display = "block"
     })
 }
+
+captureButton.addEventListener("click", (event) => {
+  canvasElement.style.display = "block"
+  videoPlayer.style.display = "none"
+  captureButton.style.display = "none"
+  var context = canvasElement.getContext("2d")
+  context.drawImage(
+    videoPlayer,
+    0,
+    0,
+    canvas.width,
+    videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width)
+  )
+  videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+    track.stop()
+  })
+
+  picture = dataURItoBlob(canvasElement.toDataURL())
+})
 
 function openCreatePostModal() {
   // setTimeout(() => {
@@ -163,19 +183,20 @@ if ("indexedDB" in window) {
 }
 
 function sendData() {
+  var id = new Date().toISOString()
+  var postData = new FormData()
+  postData.append("id", id)
+  postData.append("title", titleInput.value)
+  postData.append("location", locationInput.value)
+  postData.append("file", picture, id + ".png")
+
   fetch("https://us-central1-pwagram-920d5.cloudfunctions.net/storePostData", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
     },
-    body: JSON.stringify({
-      id: new Date().toISOString(),
-      title: titleInput.value,
-      location: locationInput.value,
-      image:
-        "https://firebasestorage.googleapis.com/v0/b/pwagram-920d5.appspot.com/o/sf-boat.jpg?alt=media&token=eef295a2-ae41-4098-a66a-d200fe06f8e5",
-    }),
+    body: postData,
   }).then((res) => {
     console.log("Sent data", res)
     updateUi()
@@ -198,6 +219,7 @@ form.addEventListener("submit", (event) => {
         id: new Date().toISOString(),
         title: titleInput.value,
         location: locationInput.value,
+        picture: picture,
       }
       writeData("sync-posts", post)
         .then(() => {

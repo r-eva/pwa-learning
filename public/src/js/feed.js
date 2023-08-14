@@ -230,8 +230,7 @@ fetch(url)
     .then((data) => {
         networkDataReceived = true
         console.log("From web", data)
-        var postArray = []
-        var users = {}
+        var dataArray = []
         for (var key in data) {
             dataArray.push(data[key])
         }

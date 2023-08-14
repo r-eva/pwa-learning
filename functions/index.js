@@ -80,8 +80,8 @@ exports.storePostData = onRequest((request, response) => {
                                 title: fields.title,
                                 location: fields.location,
                                 rawLocation: {
-                                    lat: "0",
-                                    lng: "0",
+                                    lat: fields.rawLocationLat,
+                                    lng: fields.rawLocationLng,
                                 },
                                 image:
                                     "https://firebasestorage.googleapis.com/v0/b/" +
@@ -124,10 +124,12 @@ exports.storePostData = onRequest((request, response) => {
                                             console.log(err)
                                         })
                                 })
-                                response.status(201).json({
-                                    message: "Data Stored",
-                                    id: fields.id,
-                                })
+                                response
+                                    .status(201)
+                                    .json({
+                                        message: "Data Stored",
+                                        id: fields.id,
+                                    })
                             })
                             .catch(() => {
                                 response.status(500).json({ error: err })

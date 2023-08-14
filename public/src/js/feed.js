@@ -17,6 +17,7 @@ var picture
 var locationBtn = document.querySelector("#location-btn")
 var locationLoader = document.querySelector("#location-loader")
 var fetchedLocation = { lat: 0, lng: 0 }
+const tempFetchedLocation = { lat: 0, lng: 0 }
 
 locationBtn.addEventListener("click", (event) => {
     if (!("geolocation" in navigator)) {
@@ -252,8 +253,8 @@ function sendData() {
     postData.append("id", id)
     postData.append("title", titleInput.value)
     postData.append("location", locationInput.value)
-    postData.append("rawLocationLat", fetchedLocation.lat)
-    postData.append("rawLocationLng", fetchedLocation.lng)
+    postData.append("rawLocationLat", tempFetchedLocation.lat)
+    postData.append("rawLocationLng", tempFetchedLocation.lng)
     postData.append("file", picture, id + ".png")
     console.log("postData", postData)
 
@@ -286,7 +287,7 @@ form.addEventListener("submit", (event) => {
                 title: titleInput.value,
                 location: locationInput.value,
                 picture: picture,
-                rawLocation: fetchedLocation,
+                rawLocation: tempFetchedLocation,
             }
             writeData("sync-posts", post)
                 .then(() => {
@@ -298,6 +299,9 @@ form.addEventListener("submit", (event) => {
                     )
                     var data = { message: "Your Post was saved for syncing" }
                     snackbarContainer.MaterialSnackbar.showSnackbar(data)
+                    setTimeout(() => {
+                        location.reload()
+                    }, 3000)
                 })
                 .catch((err) => {
                     console.log(err)

@@ -117,19 +117,17 @@ exports.storePostData = onRequest((request, response) => {
                                             JSON.stringify({
                                                 title: "New Post",
                                                 content: "New Post added!",
-                                                openUrl: "/help",
+                                                openUrl: "/",
                                             })
                                         )
                                         .catch((err) => {
                                             console.log(err)
                                         })
                                 })
-                                response
-                                    .status(201)
-                                    .json({
-                                        message: "Data Stored",
-                                        id: fields.id,
-                                    })
+                                response.status(201).json({
+                                    message: "Data Stored",
+                                    id: fields.id,
+                                })
                             })
                             .catch(() => {
                                 response.status(500).json({ error: err })

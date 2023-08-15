@@ -1,8 +1,8 @@
 importScripts("/src/js/idb.js")
 importScripts("/src/js/utility.js")
 
-var CACHE_STATIC_NAME = "static-v69"
-var CACHE_DYNAMIC_NAME = "dynamic-v40"
+var CACHE_STATIC_NAME = "static-v71"
+var CACHE_DYNAMIC_NAME = "dynamic-v42"
 var STATIC_FILES = [
     "/",
     "/index.html",
@@ -21,16 +21,6 @@ var STATIC_FILES = [
     "https://fonts.googleapis.com/icon?family=Material+Icons",
     "https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css",
 ]
-
-// function trimCache(cacheName, maxItems) {
-//   caches.open(cacheName).then((cache) => {
-//     return cache.keys().then((keys) => {
-//       if (keys.length > maxItems) {
-//         cache.delete(keys[0]).then(trimCache(cacheName, maxItems))
-//       }
-//     })
-//   })
-// }
 
 self.addEventListener("install", function (event) {
     console.log("[Service Worker] Installing Service Worker ...", event)

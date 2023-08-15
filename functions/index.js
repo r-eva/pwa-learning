@@ -99,7 +99,7 @@ exports.storePostData = onRequest((request, response) => {
                                 )
                                 return admin
                                     .database()
-                                    .ref("subscriptios")
+                                    .ref("subscriptions")
                                     .once("value")
                             })
                             .then((subscriptions) => {

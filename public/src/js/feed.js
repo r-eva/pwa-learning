@@ -299,9 +299,6 @@ form.addEventListener("submit", (event) => {
                     )
                     var data = { message: "Your Post was saved for syncing" }
                     snackbarContainer.MaterialSnackbar.showSnackbar(data)
-                    setTimeout(() => {
-                        location.reload()
-                    }, 3000)
                 })
                 .catch((err) => {
                     console.log(err)
